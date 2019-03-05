@@ -1,0 +1,7 @@
+---
+node_role: worker
+node_tcp_ports:
+  - 10250
+  - 10255
+  - 30000-32767
+  - 6783
