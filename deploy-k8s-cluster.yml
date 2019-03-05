@@ -1,0 +1,6 @@
+- name: Kubernetes Deployment using Ansible and Kubeadm
+  hosts: all
+  become: True
+
+  roles:
+    - role: common-prerequisite
