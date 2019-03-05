@@ -1,2 +1,45 @@
 ---
 # tasks file for common-prerequisite
+
+# - name: Testing
+#   debug:
+#     msg: "Master"
+#   when: node_role is defined and node_role == "master"
+
+- name: Disabling Selinux Context
+  selinux:
+    state: disabled
+
+- name: Add IP address of all hosts to all hosts
+  lineinfile:
+    dest: /etc/hosts
+    regexp: '.*{{ item }}$'
+    line: "{{item}} {{ hostvars[item].ansible_hostname }}"
+    state: present
+  when: hostvars[item].ansible_hostname is defined
+  with_items: "{{ groups.all }}"
+
+- name: Enabling Firewall
+  firewalld:
+    port: "{{ item }}/tcp"
+    permanent: yes
+    state: enabled
+  with_items: "{{ node_tcp_ports }}"
+
+- name: Restart Firewll Service
+  service:
+    name: firewalld
+    state: restarted
+
+- name: Executing modprobe br_netfilter
+  shell: modprobe br_netfilter && echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables
+
+- name: Add Kubernetese Repository
+  yum_repository:
+    name: kubernetes
+    description: Kubernetes Repo added by Ansible
+    baseurl: "{{ repo_base_url }}"
+    gpgcheck: yes
+    enabled: yes
+    repo_gpgcheck: yes
+    gpgkey: "{{ repo_gpg_keys }}"
