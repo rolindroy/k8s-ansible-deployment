@@ -1,0 +1,11 @@
+[master]
+10.0.1.10 ansible_hostname=k8s-master
+
+[worker]
+10.0.1.11 ansible_hostname=k8s-worker-nodes-hzb0
+10.0.1.12 ansible_hostname=k8s-worker-nodes-wnbw
+
+[all:vars]
+ansible_ssh_user=rolind_roy  # Chnage Username here
+ansible_ssh_private_key_file=auth-key/kubuernetes-ssh-key.pem # SSH Private Key
+ssh_args = -o StrictHostKeyChecking=no
