@@ -10,7 +10,7 @@
       when: node_role is defined and node_role == "master"
 
   tasks:
-    - name: Joining to Kubernetes Cluster
+    - name: [worker-node] Joining to Kubernetes Cluster
       shell: "{{ hostvars[groups['master'][0]]['kubeadm_token_with_join_cmd']['stdout'] }}"
       when: node_role is defined and node_role == "worker"
 
