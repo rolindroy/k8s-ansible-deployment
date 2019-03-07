@@ -43,3 +43,20 @@
     enabled: yes
     repo_gpgcheck: yes
     gpgkey: "{{ repo_gpg_keys }}"
+
+- name: Installing Kubeadm and docker packages
+  yum:
+    name: "{{ packages }}"
+    state: latest
+
+- name: Enable and restart docker service
+  service:
+    name: docker
+    enabled: yes
+    state: restarted
+
+- name: Enable and restart kublet service
+  service:
+    name: kubelet
+    enabled: yes
+    state: restarted
