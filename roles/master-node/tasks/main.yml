@@ -1,2 +1,45 @@
 ---
 # tasks file for master-node
+
+- name: Initializing Kubeadm
+  command: kubeadm init
+  register: kube_init_out
+
+- name: debug
+  debug:
+    msg: "{{ kube_init_out }}"
+
+- name: Creating .kube directory in the $HOME directory
+  file:
+    path: "{{ ansible_env.HOME }}/.kube"
+    state: directory
+
+- name: Copy Kubernetes conf file to $HOME/.kube/
+  shell: cp -i /etc/kubernetes/admin.conf "{{ ansible_env.HOME }}/.kube/config"
+
+- name: Change Permission for the kubernetes config file
+  shell: chown $(id -u):$(id -g) "{{ ansible_env.HOME }}/.kube/config"
+
+- name: Getting base64 value of Kubectl Version
+  shell: kubectl version | base64 | tr -d '\n'
+  register: kubectl_version
+
+- name: Deploying Kubernetes wave-net Networking using kubctl version
+  shell: kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version={{ kubectl_version.stdout }}"
+
+- name: Waiting for all pods to come up
+  shell: kubectl get pods --all-namespaces -o json
+  register: kubectl_get_pods
+  until: kubectl_get_pods.stdout|from_json|json_query('items[*].status.phase')|unique == ["Running"]
+
+- name: Get Master node status
+  shell: kubectl get nodes
+  register: master_node_status
+  until:
+    - '" Ready "  in master_node_status.stdout'
+  retries: 6
+  delay: 2
+
+- name: Creating new kubeadm token with join command
+  shell: kubeadm token create --print-join-command
+  register: kubeadm_token_with_join_cmd
