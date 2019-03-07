@@ -1,6 +1,24 @@
+## https://www.linuxtechi.com/install-kubernetes-1-7-centos7-rhel7/
 - name: Kubernetes Deployment using Ansible and Kubeadm
   hosts: all
   become: True
 
   roles:
     - role: common-prerequisite
+
+    - role: master-node
+      when: node_role is defined and node_role == "master"
+
+  tasks:
+    - name: Joining to Kubernetes Cluster
+      shell: "{{ hostvars[groups['master'][0]]['kubeadm_token_with_join_cmd']['stdout'] }}"
+      when: node_role is defined and node_role == "worker"
+
+    - name: Get All node status
+      shell: kubectl get nodes
+      register: node_status
+      until:
+        - '" NotReady "  not in node_status.stdout'
+      retries: 6
+      delay: 2
+      when: node_role is defined and node_role == "master"
